@@ -1,11 +1,18 @@
 package main
 
-import "github.com/joho/godotenv"
+import (
+	"log"
+
+	"github.com/MouslyCode/bang-cukur/database"
+	"github.com/joho/godotenv"
+)
 
 func main() {
 	err := godotenv.Load()
 	if err != nil {
-		return
+		log.Fatal("Error loading .env file!")
 	}
+
+	database.Connect()
 
 }
