@@ -7,7 +7,7 @@ import (
 )
 
 func AuthRoutes(r *gin.Engine) {
-	user := r.Group("/user")
+	user := r.Group("/")
 	{
 		user.POST("/login", controllers.Login)
 		user.POST("/create", middleware.OwnerMiddleware(), controllers.UserCreate)
