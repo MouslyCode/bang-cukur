@@ -2,53 +2,54 @@ package middleware
 
 import (
 	"net/http"
+	"slices"
 	"strings"
 
-	"github.com/MouslyCode/bang-cukur/common/constant"
 	"github.com/MouslyCode/bang-cukur/common/helper"
 	"github.com/gin-gonic/gin"
 )
 
-func OwnerMiddleware() gin.HandlerFunc {
+func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		token := c.GetHeader("Authorization")
 		if !strings.HasPrefix(token, "Bearer ") {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
-			c.Abort()
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 			return
 		}
 		token = strings.TrimPrefix(token, "Bearer ")
-		c.Set("token", token)
 
-		userId, err := helper.VerifyJwt(token)
+		claims, err := helper.VerifyJwt(token)
 		if err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
-			c.Abort()
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 			return
 		}
-		c.Set("user_id", userId)
-		roleId := c.GetInt("role_id")
-		if roleId != constant.RoleOwnerID {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Prohibited to access"})
-			c.Abort()
-			return
-		}
+
+		c.Set("user_id", claims.UserId)
+		c.Set("role_id", claims.RoleId)
+
 		c.Next()
 
 	}
 }
 
-func CashierMiddleware() gin.HandlerFunc {
+func RoleOnly(roles ...uint) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		token := c.GetHeader("Authorization")
-		if !strings.HasPrefix(token, "Bearer ") {
-			c.JSON(401, gin.H{"error": "Unauthorized"})
-			c.Abort()
+		roleVal, exists := c.Get("role_id")
+		if !exists {
+			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "Role Not Found"})
 			return
 		}
-		token = strings.TrimPrefix(token, "Bearer ")
-		c.Set("token", token)
-		c.Next()
 
+		roleID, ok := roleVal.(uint)
+		if !ok {
+			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "Invalid role type"})
+		}
+
+		if slices.Contains(roles, roleID) {
+			c.Next()
+			return
+		}
+
+		c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "Access Denied"})
 	}
 }
