@@ -1,4 +1,4 @@
-package productModel
+package transactionModel
 
 import (
 	"time"
@@ -7,18 +7,17 @@ import (
 	"gorm.io/gorm"
 )
 
-type Product struct {
+type Transactions struct {
 	ID        uuid.UUID `gorm:"type:char(36);primaryKey;not null" json:"id"`
 	Name      string    `gorm:"type:varchar(100);not null" json:"name"`
 	Price     int64     `gorm:"not null" json:"price"`
-	Stock     int64     `gorm:"not null" json:"stock"`
 	Img       string    `gorm:"type:varchar(255)" json:"img_url"`
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	DeletedAt gorm.DeletedAt `gorm:"index" json:"-"`
 }
 
-func (p *Product) BeforeCreate(tx *gorm.DB) (err error) {
-	p.ID = uuid.New()
+func (t *Transactions) BeforeCreate(tx *gorm.DB) (err error) {
+	t.ID = uuid.New()
 	return
 }

@@ -5,8 +5,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/MouslyCode/bang-cukur/models/productModel"
-	"github.com/MouslyCode/bang-cukur/models/serviceModel"
+	"github.com/MouslyCode/bang-cukur/models/itemModel"
 	"github.com/MouslyCode/bang-cukur/models/userModel"
 	"github.com/joho/godotenv"
 	"gorm.io/driver/mysql"
@@ -34,6 +33,6 @@ func Connect() {
 		log.Fatal("Failed to connect to database : ", err)
 	}
 
-	DB.AutoMigrate(userModel.User{}, serviceModel.Service{}, productModel.Product{})
+	DB.AutoMigrate(userModel.User{}, itemModel.Item{})
 
 }
