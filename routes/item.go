@@ -7,13 +7,15 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func ProductRoutes(r *gin.Engine) {
-	product := r.Group("/product", middleware.AuthMiddleware())
+func ItemRoutes(r *gin.Engine) {
+	item := r.Group("/item", middleware.AuthMiddleware())
 
-	product.GET("", middleware.RoleOnly(constant.RoleOwnerID), controllers.GetItems)
-	product.POST("", middleware.RoleOnly(constant.RoleOwnerID), controllers.CreateItem)
-	product.PUT("/:id", middleware.RoleOnly(constant.RoleOwnerID), controllers.UpdateItem)
-	product.DELETE("/:id", middleware.RoleOnly(constant.RoleOwnerID), controllers.DeleteItem)
-	product.GET("/deleted", middleware.RoleOnly(constant.RoleOwnerID), controllers.GetDeletedItems)
-	product.PATCH("/restore/:id", middleware.RoleOnly(constant.RoleOwnerID), controllers.RestoreItem)
+	item.GET("", middleware.RoleOnly(constant.RoleOwnerID), controllers.GetItems)
+	item.GET("/:id", middleware.RoleOnly(constant.RoleOwnerID), controllers.GetItemByID)
+	item.GET("/:type", middleware.RoleOnly(constant.RoleOwnerID), controllers.GetItemByType)
+	item.POST("", middleware.RoleOnly(constant.RoleOwnerID), controllers.CreateItem)
+	item.PUT("/:id", middleware.RoleOnly(constant.RoleOwnerID), controllers.UpdateItem)
+	item.DELETE("/:id", middleware.RoleOnly(constant.RoleOwnerID), controllers.DeleteItem)
+	item.GET("/deleted", middleware.RoleOnly(constant.RoleOwnerID), controllers.GetDeletedItems)
+	item.PUT("/restore/:id", middleware.RoleOnly(constant.RoleOwnerID), controllers.RestoreItem)
 }

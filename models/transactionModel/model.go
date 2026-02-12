@@ -7,17 +7,31 @@ import (
 	"gorm.io/gorm"
 )
 
-type Transactions struct {
+type Transaction struct {
 	ID        uuid.UUID `gorm:"type:char(36);primaryKey;not null" json:"id"`
-	Name      string    `gorm:"type:varchar(100);not null" json:"name"`
-	Price     int64     `gorm:"not null" json:"price"`
-	Img       string    `gorm:"type:varchar(255)" json:"img_url"`
+	UserID    uuid.UUID `gorm:"type:char(36);not null" json:"user_id"`
+	Total     int64     `gorm:"not null" json:"total"`
+	Paid      int64     `gorm:"not null" json:"paid"`
+	Change    int64     `gorm:"not null" json:"change"`
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	DeletedAt gorm.DeletedAt `gorm:"index" json:"-"`
 }
 
-func (t *Transactions) BeforeCreate(tx *gorm.DB) (err error) {
+func (t *Transaction) BeforeCreate(tx *gorm.DB) (err error) {
 	t.ID = uuid.New()
 	return
+}
+
+type TransactionItem struct {
+	ID            uint      `gorm:"type:char(36);primaryKey;not null" json:"id"`
+	TransactionID uuid.UUID `gorm:"type:char(36);primaryKey;not null" json:"transaction_id"`
+	ItemID        uuid.UUID `gorm:"type:char(36);not null" json:"item_id"`
+	ItemName      string    `gorm:"type:varchar(150)" json:"item_name"`
+	Price         int64     `gorm:"not null" json:"price"`
+	Qty           int       `gorm:"not null" json:"qty"`
+	Subtotal      int64     `gorm:"not null" json:"subtotal"`
+	CreatedAt     time.Time
+	UpdatedAt     time.Time
+	DeletedAt     gorm.DeletedAt `gorm:"index" json:"-"`
 }

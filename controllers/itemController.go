@@ -16,6 +16,30 @@ func GetItems(c *gin.Context) {
 	c.JSON(http.StatusOK, items)
 }
 
+func GetItemByID(c *gin.Context) {
+	idParam := c.Param("id")
+	itemID, err := uuid.Parse(idParam)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid item ID!"})
+		return
+	}
+
+	var item itemModel.Item
+	if err := database.DB.Where("id = ? AND deleted_at IS NULL", itemID).First(&item).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Item not found!"})
+		return
+	}
+
+	c.JSON(http.StatusOK, item)
+}
+
+func GetItemByType(c *gin.Context) {
+	typeParam := c.Param("type")
+	var items []itemModel.Item
+	database.DB.Where("type = ? AND deleted_at IS NULL", typeParam).Find(&items)
+	c.JSON(http.StatusOK, items)
+}
+
 func CreateItem(c *gin.Context) {
 	var input itemModel.Request
 	if err := c.ShouldBindJSON(&input); err != nil {
@@ -80,9 +104,24 @@ func UpdateItem(c *gin.Context) {
 		return
 	}
 
+	if input.Type != constant.Product && input.Type != constant.Service {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid type!"})
+		return
+	}
+
+	if input.Type == constant.Product && input.Stock == nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Product must have stock"})
+		return
+	}
+
+	if input.Type == constant.Service {
+		input.Stock = nil
+	}
+
 	item.Name = input.Name
 	item.Price = input.Price
 	item.Img = input.Img
+	item.Type = input.Type
 
 	if err := database.DB.Save(&item).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
