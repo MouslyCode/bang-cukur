@@ -1,7 +1,13 @@
 package transactionModel
 
-type Request struct {
-	Name  string `json:"name" binding:"required"`
-	Price int64  `json:"price" binding:"required"`
-	Img   string `json:"img_url" binding:"required"`
+import "github.com/google/uuid"
+
+type TransactionItemRequest struct {
+	ItemID uuid.UUID `json:"item_id" binding:"required"`
+	Qty    *int      `json:"qty" binding:"required,min=1"`
+}
+
+type CreateTransactionRequest struct {
+	Paid  int64                    `json:"paid" binding:"required"`
+	Items []TransactionItemRequest `json:"items" binding:"required,dive"`
 }
