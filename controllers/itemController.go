@@ -12,8 +12,16 @@ import (
 
 func GetItems(c *gin.Context) {
 	var items []itemModel.Item
-	database.DB.Where("deleted_at IS NULL").Find(&items)
-	c.JSON(http.StatusOK, items)
+	typeParam := c.Query("type")
+	if typeParam != "" {
+		database.DB.Where("type = ? AND deleted_at IS NULL", typeParam).Find(&items)
+		c.JSON(http.StatusOK, items)
+		return
+	} else {
+		database.DB.Where("deleted_at IS NULL").Find(&items)
+		c.JSON(http.StatusOK, items)
+		return
+	}
 }
 
 func GetItemByID(c *gin.Context) {
@@ -23,21 +31,12 @@ func GetItemByID(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid item ID!"})
 		return
 	}
-
 	var item itemModel.Item
 	if err := database.DB.Where("id = ? AND deleted_at IS NULL", itemID).First(&item).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Item not found!"})
 		return
 	}
-
 	c.JSON(http.StatusOK, item)
-}
-
-func GetItemByType(c *gin.Context) {
-	typeParam := c.Param("type")
-	var items []itemModel.Item
-	database.DB.Where("type = ? AND deleted_at IS NULL", typeParam).Find(&items)
-	c.JSON(http.StatusOK, items)
 }
 
 func CreateItem(c *gin.Context) {
@@ -75,11 +74,12 @@ func CreateItem(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, gin.H{
-		"id":    item.ID,
-		"Name":  item.Name,
-		"Price": item.Price,
-		"Img":   item.Img,
-		"type":  item.Type,
+		"message": "--------Item created successfully!--------",
+		"id":      item.ID,
+		"Name":    item.Name,
+		"Price":   item.Price,
+		"Img":     item.Img,
+		"type":    item.Type,
 	})
 
 }
@@ -129,7 +129,7 @@ func UpdateItem(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"message": "Item Update Successfully!",
+		"message": "--------Item updated successfully!--------",
 		"item":    item,
 	})
 }
@@ -148,7 +148,7 @@ func DeleteItem(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "Item deleted successfully!"})
+	c.JSON(http.StatusOK, gin.H{"message": "--------Item deleted successfully!--------"})
 }
 
 func GetDeletedItems(c *gin.Context) {
@@ -160,5 +160,5 @@ func GetDeletedItems(c *gin.Context) {
 func RestoreItem(c *gin.Context) {
 	itemID := c.Param("id")
 	database.DB.Unscoped().Model(&itemModel.Item{}).Where("id = ?", itemID).Update("deleted_at", nil)
-	c.JSON(http.StatusOK, gin.H{"message": "Item restored successfully"})
+	c.JSON(http.StatusOK, gin.H{"message": "--------Item restored successfully!--------"})
 }

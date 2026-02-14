@@ -28,7 +28,6 @@ func AuthMiddleware() gin.HandlerFunc {
 		c.Set("role_id", claims.RoleId)
 
 		c.Next()
-
 	}
 }
 

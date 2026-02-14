@@ -23,6 +23,7 @@ func main() {
 	database.Connect()
 	r := gin.Default()
 	routes.AuthRoutes(r)
+	routes.ItemRoutes(r)
 
 	r.Run(":8080")
 }
