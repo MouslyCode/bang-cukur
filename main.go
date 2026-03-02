@@ -24,6 +24,7 @@ func main() {
 	r := gin.Default()
 	routes.AuthRoutes(r)
 	routes.ItemRoutes(r)
+	routes.TransactionRoutes(r)
 
 	r.Run(":8080")
 }

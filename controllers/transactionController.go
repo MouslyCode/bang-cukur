@@ -96,3 +96,42 @@ func CreateTransaction(c *gin.Context) {
 		"message": "Transaction Success!",
 	})
 }
+
+func GetTransactions(c *gin.Context) {
+	var transactions []transactionModel.Transaction
+	database.DB.Where("deleted_at IS NULL").Find(&transactions)
+	c.JSON(http.StatusOK, transactions)
+}
+
+func GetTransactionById(c *gin.Context) {
+	idParam := c.Param("id")
+	transactionID, err := uuid.Parse(idParam)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid transaction ID !"})
+		return
+	}
+
+	var transaction transactionModel.Transaction
+	if err := database.DB.Where("id = ? AND deleted_at IS NULL", transactionID).First(&transaction).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Transaction not found!"})
+		return
+	}
+
+	c.JSON(http.StatusOK, transaction)
+}
+
+func UpdateTransaction(c *gin.Context) {
+	idParam := c.Param("id")
+	transactionID, err := uuid.Parse(idParam)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid transaction ID!"})
+		return
+	}
+
+	var transaction transactionModel.Transaction
+	if err := database.DB.Where(&transaction, "id = ? AND deleted_at IS NULL", transactionID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Transaction not found!"})
+		return
+	}
+
+}
