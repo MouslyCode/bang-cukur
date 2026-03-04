@@ -1,10 +1,8 @@
 package main
 
 import (
-	"fmt"
 	"log"
 
-	"github.com/MouslyCode/bang-cukur/common/helper"
 	"github.com/MouslyCode/bang-cukur/database"
 	"github.com/MouslyCode/bang-cukur/routes"
 	"github.com/gin-gonic/gin"
@@ -12,9 +10,6 @@ import (
 )
 
 func main() {
-	hash, _ := helper.HashPassword("jokiyakin22")
-	fmt.Println(hash)
-
 	err := godotenv.Load()
 	if err != nil {
 		log.Fatal("Error loading .env file!")
