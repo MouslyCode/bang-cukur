@@ -11,6 +11,3 @@ type CreateTransactionRequest struct {
 	Paid  int64                    `json:"paid" binding:"required"`
 	Items []TransactionItemRequest `json:"items" binding:"required,dive"`
 }
-
-type UpdateTransactionRequest struct {
-}

@@ -21,12 +21,13 @@ func CreateTransaction(c *gin.Context) {
 		return
 	}
 
-	userID := c.MustGet("UserID").(uuid.UUID)
+	userID := c.MustGet("user_id").(uuid.UUID)
+	var transaction transactionModel.Transaction
+	var transactionItems []transactionModel.TransactionItem
 
 	err := database.DB.Transaction(func(tx *gorm.DB) error {
 
 		var total int64
-		var transactionItems []transactionModel.TransactionItem
 
 		for _, reqItem := range input.Items {
 
@@ -64,7 +65,7 @@ func CreateTransaction(c *gin.Context) {
 			return errors.New("Insufficient Payment")
 		}
 
-		transaction := transactionModel.Transaction{
+		transaction = transactionModel.Transaction{
 			UserID: userID,
 			Total:  total,
 			Paid:   input.Paid,
@@ -94,12 +95,20 @@ func CreateTransaction(c *gin.Context) {
 
 	c.JSON(http.StatusCreated, gin.H{
 		"message": "Transaction Success!",
+		"total":   transaction.Total,
+		"paid":    transaction.Paid,
+		"change":  transaction.Change,
+		"items":   transactionItems,
 	})
 }
 
 func GetTransactions(c *gin.Context) {
 	var transactions []transactionModel.Transaction
-	database.DB.Where("deleted_at IS NULL").Find(&transactions)
+
+	if err := database.DB.Preload("Items").Where("deleted_at IS NULL").Find(&transactions).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
 	c.JSON(http.StatusOK, transactions)
 }
 
@@ -112,7 +121,7 @@ func GetTransactionById(c *gin.Context) {
 	}
 
 	var transaction transactionModel.Transaction
-	if err := database.DB.Where("id = ? AND deleted_at IS NULL", transactionID).First(&transaction).Error; err != nil {
+	if err := database.DB.Preload("Items").Where("id = ? AND deleted_at IS NULL", transactionID).First(&transaction).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Transaction not found!"})
 		return
 	}
@@ -120,7 +129,43 @@ func GetTransactionById(c *gin.Context) {
 	c.JSON(http.StatusOK, transaction)
 }
 
-func UpdateTransaction(c *gin.Context) {
+func DeleteTransaction(c *gin.Context) {
+	idParam := c.Param("id")
+
+	transactionID, err := uuid.Parse(idParam)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid Transaction ID!"})
+		return
+	}
+
+	var transaction transactionModel.Transaction
+
+	if err := database.DB.
+		Where("id = ? AND deleted_at IS NULL", transactionID).
+		First(&transaction).Error; err != nil {
+
+		c.JSON(http.StatusNotFound, gin.H{"error": "Transaction not found!"})
+		return
+	}
+
+	if err := database.DB.Delete(&transaction).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete transaction!"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Transaction deleted successfully!"})
+}
+
+func GetDeletedTransactions(c *gin.Context) {
+	var transactions []transactionModel.Transaction
+	if err := database.DB.Unscoped().Preload("Items").Where("deleted_at IS NOT NULL").Find(&transactions).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, transactions)
+}
+
+func RestoreTransaction(c *gin.Context) {
 	idParam := c.Param("id")
 	transactionID, err := uuid.Parse(idParam)
 	if err != nil {
@@ -129,9 +174,21 @@ func UpdateTransaction(c *gin.Context) {
 	}
 
 	var transaction transactionModel.Transaction
-	if err := database.DB.Where(&transaction, "id = ? AND deleted_at IS NULL", transactionID).Error; err != nil {
+
+	if err := database.DB.
+		Unscoped().Where("id = ? AND deleted_at IS NOT NULL", transactionID).
+		First(&transaction).Error; err != nil {
+
 		c.JSON(http.StatusNotFound, gin.H{"error": "Transaction not found!"})
 		return
 	}
 
+	if err := database.DB.Unscoped().
+		Model(&transaction).Update("deleted_at", nil).Error; err != nil {
+
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to restore transaction!"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Transaction restored successfully!"})
 }

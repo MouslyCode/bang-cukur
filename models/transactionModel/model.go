@@ -8,11 +8,12 @@ import (
 )
 
 type Transaction struct {
-	ID        uuid.UUID `gorm:"type:char(36);primaryKey;not null" json:"id"`
-	UserID    uuid.UUID `gorm:"type:char(36);not null" json:"user_id"`
-	Total     int64     `gorm:"not null" json:"total"`
-	Paid      int64     `gorm:"not null" json:"paid"`
-	Change    int64     `gorm:"not null" json:"change"`
+	ID        uuid.UUID         `gorm:"type:char(36);primaryKey;not null" json:"id"`
+	UserID    uuid.UUID         `gorm:"type:char(36);not null" json:"user_id"`
+	Total     int64             `gorm:"not null" json:"total"`
+	Paid      int64             `gorm:"not null" json:"paid"`
+	Change    int64             `gorm:"not null" json:"change"`
+	Items     []TransactionItem `gorm:"foreignKey:TransactionID" json:"items"`
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	DeletedAt gorm.DeletedAt `gorm:"index" json:"-"`
@@ -24,8 +25,8 @@ func (t *Transaction) BeforeCreate(tx *gorm.DB) (err error) {
 }
 
 type TransactionItem struct {
-	ID            uint      `gorm:"type:char(36);primaryKey;not null" json:"id"`
-	TransactionID uuid.UUID `gorm:"type:char(36);primaryKey;not null" json:"transaction_id"`
+	ID            uint      `gorm:"primaryKey;not null" json:"id"`
+	TransactionID uuid.UUID `gorm:"type:char(36);not null" json:"transaction_id"`
 	ItemID        uuid.UUID `gorm:"type:char(36);not null" json:"item_id"`
 	ItemName      string    `gorm:"type:varchar(150)" json:"item_name"`
 	Price         int64     `gorm:"not null" json:"price"`

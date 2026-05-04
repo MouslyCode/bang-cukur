@@ -158,7 +158,14 @@ func GetDeletedItems(c *gin.Context) {
 }
 
 func RestoreItem(c *gin.Context) {
-	itemID := c.Param("id")
+	idParam := c.Param("id")
+
+	itemID, err := uuid.Parse(idParam)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid item ID!"})
+		return
+	}
+
 	database.DB.Unscoped().Model(&itemModel.Item{}).Where("id = ?", itemID).Update("deleted_at", nil)
 	c.JSON(http.StatusOK, gin.H{"message": "--------Item restored successfully!--------"})
 }

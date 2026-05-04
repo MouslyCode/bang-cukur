@@ -8,6 +8,10 @@ import (
 
 func TransactionRoutes(r *gin.Engine) {
 	transaction := r.Group("/transaction", middleware.AuthMiddleware())
-
-	transaction.POST("", controllers.CreateTransaction)
+	transaction.GET("", middleware.AuthMiddleware(), controllers.GetTransactions)
+	transaction.GET("/:id", middleware.AuthMiddleware(), controllers.GetTransactionById)
+	transaction.POST("", middleware.AuthMiddleware(), controllers.CreateTransaction)
+	transaction.DELETE("/:id", middleware.AuthMiddleware(), controllers.DeleteTransaction)
+	transaction.GET("/deleted", middleware.AuthMiddleware(), controllers.GetDeletedTransactions)
+	transaction.PUT("/restore/:id", middleware.AuthMiddleware(), controllers.RestoreTransaction)
 }
